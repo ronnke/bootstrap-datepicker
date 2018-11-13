@@ -1,21 +1,8 @@
-/* =========================================================
- * bootstrap-datepicker.js
- * Repo: https://github.com/uxsolutions/bootstrap-datepicker/
- * Demo: https://eternicode.github.io/bootstrap-datepicker/
- * Docs: https://bootstrap-datepicker.readthedocs.org/
- * =========================================================
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+/*!
+ * Datepicker for Bootstrap v1.8.0 (https://github.com/uxsolutions/bootstrap-datepicker)
  *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * ========================================================= */
+ * Licensed under the Apache License v2.0 (http://www.apache.org/licenses/LICENSE-2.0)
+ */
 
 (function(factory){
     if (typeof define === 'function' && define.amd) {
@@ -101,11 +88,11 @@
 	// Picker object
 
 	var Datepicker = function(element, options){
-		$.data(element, 'datepicker', this);
-    
-		this._events = [];
-		this._secondaryEvents = [];
-    
+    $.data(element, 'datepicker', this);
+
+    this._events = [];
+    this._secondaryEvents = [];
+
 		this._process_options(options);
 
 		this.dates = new DateArray();
@@ -157,7 +144,8 @@
 			endDate: this._o.endDate,
 			daysOfWeekDisabled: this.o.daysOfWeekDisabled,
 			daysOfWeekHighlighted: this.o.daysOfWeekHighlighted,
-			datesDisabled: this.o.datesDisabled
+      datesDisabled: this.o.datesDisabled,
+      datesEnabled: this.o.datesEnabled
 		});
 
 		this._allow_update = false;
@@ -281,7 +269,15 @@
 			}
 			o.datesDisabled = $.map(o.datesDisabled, function(d){
 				return DPGlobal.parseDate(d, format, o.language, o.assumeNearbyYear);
-			});
+      });
+
+        o.datesEnabled = o.datesEnabled||[];
+        if (!$.isArray(o.datesEnabled)) {
+          o.datesEnabled = o.datesEnabled.split(',');
+        }
+        o.datesEnabled = $.map(o.datesEnabled, function(d){
+          return DPGlobal.parseDate(d, format, o.language, o.assumeNearbyYear);
+        });
 
 			var plc = String(o.orientation).toLowerCase().split(/\s+/g),
 				_plc = o.orientation.toLowerCase();
@@ -664,6 +660,12 @@
 			this.update();
 			return this;
 		},
+
+    setDatesEnabled: function(datesEnabled){
+      this._process_options({datesEnabled: datesEnabled});
+      this.update();
+      return this;
+    },
 
 		place: function(){
 			if (this.isInline)
@@ -1389,14 +1391,23 @@
 			return $.inArray(date.getUTCDay(), this.o.daysOfWeekDisabled) !== -1;
 		},
 
-		dateIsDisabled: function(date){
-			return (
-				this.weekOfDateIsDisabled(date) ||
+      dateIsDisabled: function(date){
+        if (this.dateIsEnabled(date)) {
+          return false;
+        }
+        return (this.weekOfDateIsDisabled(date) ||
 				$.grep(this.o.datesDisabled, function(d){
 					return isUTCEquals(date, d);
 				}).length > 0
 			);
 		},
+
+    dateIsEnabled: function(date)
+    {
+      return ($.grep(this.o.datesEnabled, function(d){
+        return isUTCEquals(date, d);
+      }).length > 0);
+      },
 
 		dateWithinRange: function(date){
 			return date >= this.o.startDate && date <= this.o.endDate;
@@ -1697,7 +1708,8 @@
 		toggleActive: false,
 		daysOfWeekDisabled: [],
 		daysOfWeekHighlighted: [],
-		datesDisabled: [],
+    datesDisabled: [],
+    datesEnabled: [],
 		endDate: Infinity,
 		forceParse: true,
 		format: 'mm/dd/yyyy',
